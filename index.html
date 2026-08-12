@@ -2,7 +2,12 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta property="og:title" content="Antonio Bonet | Obra Completa Argentina">
+    <meta property="og:description" content="Mapeo interactivo de proyectos y obras de Antonio Bonet en Argentina.">
+    <meta property="og:type" content="website">
+
     <title>Antonio Bonet | Obra Completa Argentina</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +17,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <style>
-        /* Base Architectural Styles */
         :root {
             --black: #000000;
             --white: #ffffff;
@@ -23,49 +27,73 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            /* Updated to Poppins */
+            width: 100%;
             font-family: 'Poppins', sans-serif;
             background-color: var(--white);
             color: var(--black);
+            overflow: hidden; /* Prevents scrollbars in iframes */
         }
 
         #map {
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             background: #e5e5e5;
         }
 
-        /* Editorial Overlay Panel */
+        /* Editorial Overlay Panel - Embed Optimized */
         .editorial-panel {
             position: absolute;
-            top: 30px;
-            left: 30px;
+            top: 20px;
+            left: 20px;
             z-index: 1000;
             background: var(--white);
             border: 2px solid var(--black);
-            padding: 24px;
-            max-width: 320px;
+            padding: 20px;
+            max-width: 280px;
             box-shadow: 6px 6px 0px var(--black);
+            pointer-events: auto;
         }
 
         .editorial-panel h1 {
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1rem;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin: 0 0 12px 0;
+            letter-spacing: 0.05em;
+            margin: 0 0 10px 0;
             line-height: 1.2;
         }
 
         .editorial-panel p {
             font-weight: 400;
-            font-size: 0.85rem;
-            line-height: 1.5;
+            font-size: 0.8rem;
+            line-height: 1.4;
             color: var(--gray);
             margin: 0;
         }
 
-        /* Leaflet Overrides for Minimalist / Brutalist Vibe */
+        /* Responsive adjustments for small Canva embed frames */
+        @media (max-width: 600px), (max-height: 500px) {
+            .editorial-panel {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                max-width: none;
+                padding: 12px;
+                box-shadow: 4px 4px 0px var(--black);
+            }
+            .editorial-panel h1 {
+                font-size: 0.9rem;
+                margin-bottom: 5px;
+            }
+            .editorial-panel p {
+                display: none; /* Hide description in tiny frames to save map space */
+            }
+            .leaflet-control-zoom {
+                display: none; /* Hide zoom controls on tiny mobile/embed frames */
+            }
+        }
+
+        /* Leaflet Overrides */
         .leaflet-popup-content-wrapper {
             background: var(--white);
             color: var(--black);
@@ -80,22 +108,22 @@
         }
 
         .leaflet-popup-content {
-            margin: 16px;
-            /* Updated to Poppins */
+            margin: 12px;
             font-family: 'Poppins', sans-serif;
+            min-width: 180px;
         }
 
         .popup-title {
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
             border-bottom: 2px solid var(--black);
-            padding-bottom: 8px;
-            margin-bottom: 8px;
+            padding-bottom: 6px;
+            margin-bottom: 6px;
         }
 
         .popup-meta {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             display: flex;
             justify-content: space-between;
             margin-bottom: 4px;
@@ -106,7 +134,6 @@
             font-weight: 500;
         }
 
-        /* Custom SVG Marker Animation */
         .arch-marker {
             background-color: var(--black);
             border: 2px solid var(--white);
@@ -114,6 +141,7 @@
             box-shadow: 0 0 0 1px var(--black);
             transition: transform 0.2s ease;
         }
+        
         .arch-marker:hover {
             transform: scale(1.3);
             cursor: crosshair;
@@ -124,7 +152,7 @@
 
     <div class="editorial-panel">
         <h1>Antonio Bonet<br>Obra Geolocalizada</h1>
-        <p>Mapeo de proyectos y obras en Argentina. Una exploración interactiva de su legado arquitectónico.</p>
+        <p>Mapeo de proyectos y obras en Argentina.</p>
     </div>
 
     <div id="map"></div>
@@ -133,13 +161,14 @@
     
     <script>
         const map = L.map('map', {
-            zoomControl: false 
-        }).setView([-36.0, -58.0], 7);
+            zoomControl: false,
+            scrollWheelZoom: false // Better for embeds so the user doesn't accidentally zoom when scrolling the Canva page
+        }).setView([-36.0, -58.0], 6);
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            attribution: '&copy; OpenStreetMap & CARTO',
             subdomains: 'abcd',
             maxZoom: 19
         }).addTo(map);
@@ -164,8 +193,8 @@
 
         const archIcon = L.divIcon({
             className: 'arch-marker',
-            iconSize: [14, 14],
-            iconAnchor: [7, 7]
+            iconSize: [12, 12],
+            iconAnchor: [6, 6]
         });
 
         const bounds = [];
@@ -174,7 +203,7 @@
                 <div class="popup-title">${poi.name}</div>
                 <div class="popup-meta">Status: <span>${poi.status}</span></div>
                 <div class="popup-meta">Año: <span>${poi.year}</span></div>
-                <div class="popup-meta" style="margin-top: 8px;">📍 ${poi.location}</div>
+                <div class="popup-meta" style="margin-top: 6px;">📍 ${poi.location}</div>
             `;
 
             L.marker([poi.lat, poi.lon], { icon: archIcon })
@@ -185,7 +214,7 @@
         });
 
         if (bounds.length > 0) {
-            map.fitBounds(bounds, { padding: [50, 50] });
+            map.fitBounds(bounds, { padding: [30, 30] });
         }
     </script>
 </body>
