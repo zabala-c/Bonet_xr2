@@ -1,48 +1,840 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
 
-<meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Antonio Bonet | Obra Geolocalizada</title>
 
-<title>Antonio Bonet — Obra Geolocalizada</title>
+    <meta name="description"
+          content="Mapa interactivo de la obra de Antonio Bonet en Argentina.">
 
-<meta name="description"
-      content="Mapa interactivo de la obra de Antonio Bonet en Argentina">
+    <!-- Open Graph metadata for Iframely / Canva -->
+    <meta property="og:title"
+          content="Antonio Bonet | Obra Geolocalizada">
 
-<meta property="og:title"
-      content="Antonio Bonet — Obra Geolocalizada">
+    <meta property="og:description"
+          content="Mapeo interactivo de proyectos y obras de Antonio Bonet en Argentina.">
 
-<meta property="og:description"
-      content="Mapa interactivo de proyectos y obras de Antonio Bonet en Argentina">
+    <meta property="og:type"
+          content="website">
 
-<link rel="iframely"
-      href="https://zabala-c.github.io/Bonet_xr2/embed.html"
-      media="(aspect-ratio: 16/9)">
+    <!-- Explicit Iframely embed declaration -->
+    <link rel="iframely"
+          href="https://zabala-c.github.io/Bonet_xr2/embed.html"
+          media="(aspect-ratio: 16/9)">
 
-<style>
-html,
-body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
+    <!-- Google Fonts -->
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
 
-body {
-    position: relative;
-}
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
 
-#app,
-#map,
-#viewer,
-iframe {
-    width: 100%;
-    height: 100%;
-}
-</style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap"
+          rel="stylesheet">
 
+    <!-- Leaflet -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          crossorigin="">
+
+    <style>
+
+        :root {
+            --black: #000000;
+            --white: #ffffff;
+            --gray: #777777;
+            --map-bg: #e5e5e5;
+        }
+
+        /*
+         * CANVA / IFRAME RESET
+         *
+         * The map must occupy the entire iframe.
+         */
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            min-height: 0;
+
+            overflow: hidden;
+
+            font-family: 'Poppins', sans-serif;
+
+            background: var(--white);
+            color: var(--black);
+        }
+
+        body {
+            position: relative;
+        }
+
+        /*
+         * MAIN MAP
+         */
+
+        #map {
+            position: absolute;
+
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100%;
+
+            background: var(--map-bg);
+
+            z-index: 1;
+        }
+
+        /*
+         * EDITORIAL PANEL
+         */
+
+        .editorial-panel {
+            position: absolute;
+
+            top: 20px;
+            left: 20px;
+
+            z-index: 1000;
+
+            width: auto;
+            max-width: 280px;
+
+            box-sizing: border-box;
+
+            background: var(--white);
+
+            border: 2px solid var(--black);
+
+            padding: 20px;
+
+            box-shadow: 6px 6px 0 var(--black);
+
+            pointer-events: auto;
+        }
+
+        .editorial-panel h1 {
+            margin: 0 0 10px 0;
+
+            font-weight: 700;
+
+            font-size: 1rem;
+
+            line-height: 1.2;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.05em;
+        }
+
+        .editorial-panel p {
+            margin: 0;
+
+            font-weight: 400;
+
+            font-size: 0.8rem;
+
+            line-height: 1.4;
+
+            color: var(--gray);
+        }
+
+        /*
+         * LEAFLET POPUPS
+         */
+
+        .leaflet-popup-content-wrapper {
+            background: var(--white);
+
+            color: var(--black);
+
+            border: 2px solid var(--black);
+
+            border-radius: 0 !important;
+
+            box-shadow: 4px 4px 0 var(--black) !important;
+
+            padding: 0;
+        }
+
+        .leaflet-popup-tip-container {
+            display: none;
+        }
+
+        .leaflet-popup-content {
+            margin: 12px;
+
+            min-width: 180px;
+
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .popup-title {
+            margin-bottom: 6px;
+
+            padding-bottom: 6px;
+
+            border-bottom: 2px solid var(--black);
+
+            font-weight: 700;
+
+            font-size: 0.85rem;
+
+            line-height: 1.25;
+
+            text-transform: uppercase;
+        }
+
+        .popup-meta {
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 12px;
+
+            margin-bottom: 4px;
+
+            font-size: 0.75rem;
+
+            line-height: 1.35;
+        }
+
+        .popup-meta span {
+            color: var(--gray);
+
+            font-weight: 500;
+
+            text-align: right;
+        }
+
+        /*
+         * ARCHITECTURAL MARKERS
+         */
+
+        .arch-marker {
+            width: 12px !important;
+            height: 12px !important;
+
+            margin: 0 !important;
+
+            box-sizing: border-box;
+
+            background-color: var(--black);
+
+            border: 2px solid var(--white);
+
+            border-radius: 50%;
+
+            box-shadow: 0 0 0 1px var(--black);
+
+            transition: transform 0.2s ease;
+        }
+
+        .arch-marker:hover {
+            transform: scale(1.3);
+
+            cursor: crosshair;
+        }
+
+        /*
+         * LEAFLET UI
+         */
+
+        .leaflet-control-zoom a {
+            color: var(--black) !important;
+
+            background: var(--white) !important;
+
+            border-color: var(--black) !important;
+
+            border-radius: 0 !important;
+        }
+
+        .leaflet-control-zoom {
+            border: 2px solid var(--black) !important;
+
+            box-shadow: 4px 4px 0 var(--black) !important;
+        }
+
+        .leaflet-control-attribution {
+            font-family: 'Poppins', sans-serif;
+
+            font-size: 9px;
+
+            background: rgba(255,255,255,0.85) !important;
+        }
+
+        /*
+         * SMALL CANVA EMBEDS
+         *
+         * Canva may render the iframe at a relatively small size.
+         */
+
+        @media (max-width: 600px), (max-height: 500px) {
+
+            .editorial-panel {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+
+                width: auto;
+                max-width: none;
+
+                padding: 12px;
+
+                box-shadow: 4px 4px 0 var(--black);
+            }
+
+            .editorial-panel h1 {
+                margin-bottom: 0;
+
+                font-size: 0.85rem;
+            }
+
+            .editorial-panel p {
+                display: none;
+            }
+
+            .leaflet-control-zoom {
+                display: none;
+            }
+
+        }
+
+        /*
+         * VERY SMALL / HORIZONTAL CANVA FRAME
+         */
+
+        @media (max-height: 350px) {
+
+            .editorial-panel {
+                top: 8px;
+                left: 8px;
+
+                padding: 8px 10px;
+
+                border-width: 1px;
+
+                box-shadow: 3px 3px 0 var(--black);
+            }
+
+            .editorial-panel h1 {
+                font-size: 0.7rem;
+            }
+
+        }
+
+    </style>
 </head>
+
+<body>
+
+    <!--
+        EDITORIAL OVERLAY
+    -->
+
+    <div class="editorial-panel">
+
+        <h1>
+            Antonio Bonet<br>
+            Obra Geolocalizada
+        </h1>
+
+        <p>
+            Mapeo de proyectos y obras en Argentina.
+        </p>
+
+    </div>
+
+
+    <!--
+        MAP CONTAINER
+    -->
+
+    <div id="map"></div>
+
+
+    <!--
+        LEAFLET
+    -->
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        crossorigin="">
+    </script>
+
+
+    <script>
+
+        /*
+         * ============================================================
+         * MAP INITIALIZATION
+         * ============================================================
+         */
+
+        const map = L.map('map', {
+
+            zoomControl: false,
+
+            /*
+             * Important for Canva:
+             * prevents the Canva document from unexpectedly
+             * zooming the map when the user scrolls.
+             */
+            scrollWheelZoom: false,
+
+            /*
+             * Allows normal touch interaction.
+             */
+            touchZoom: true,
+
+            dragging: true,
+
+            doubleClickZoom: true,
+
+            boxZoom: false,
+
+            keyboard: true
+
+        }).setView([-36.0, -58.0], 6);
+
+
+        /*
+         * ZOOM CONTROL
+         */
+
+        L.control.zoom({
+
+            position: 'bottomright'
+
+        }).addTo(map);
+
+
+        /*
+         * ============================================================
+         * CARTO BASEMAP
+         * ============================================================
+         */
+
+        L.tileLayer(
+
+            'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+
+            {
+
+                attribution:
+                    '&copy; OpenStreetMap & CARTO',
+
+                subdomains:
+                    'abcd',
+
+                maxZoom:
+                    19,
+
+                detectRetina:
+                    true
+
+            }
+
+        ).addTo(map);
+
+
+        /*
+         * ============================================================
+         * ANTONIO BONET DATA
+         * ============================================================
+         */
+
+        const bonetData = [
+
+            {
+                name: "Casa de Estudios para Artistas",
+                lat: -34.59777,
+                lon: -58.37971,
+                status: "Obra",
+                year: "1938-1939",
+                location: "Buenos Aires"
+            },
+
+            {
+                name: "Casas en Mártinez",
+                lat: -34.47832,
+                lon: -58.49426,
+                status: "Obra",
+                year: "1940-1942",
+                location: "Acassuso"
+            },
+
+            {
+                name: "Casa Daneri",
+                lat: -38.17543,
+                lon: -57.64704,
+                status: "Obra",
+                year: "1940-1943",
+                location: "Chapadmalal"
+            },
+
+            {
+                name: "Casa López Llausás",
+                lat: -34.57838,
+                lon: -58.70955,
+                status: "Obra",
+                year: "1945",
+                location: "Bella Vista"
+            },
+
+            {
+                name: "Clínica Stapler",
+                lat: -34.58645,
+                lon: -58.40807,
+                status: "Obra",
+                year: "1954-1957",
+                location: "Buenos Aires"
+            },
+
+            {
+                name: "Casa Oks",
+                lat: -34.47974,
+                lon: -58.49043,
+                status: "Obra",
+                year: "1955-1957",
+                location: "Martínez"
+            },
+
+            {
+                name: "Torre y Galeria Rivadavia",
+                lat: -37.99995,
+                lon: -57.54853,
+                status: "Obra",
+                year: "1956-1957",
+                location: "Mar del Plata"
+            },
+
+            {
+                name: "Centro Comercial",
+                lat: -34.66349,
+                lon: -58.52101,
+                status: "Obra",
+                year: "1956-1958",
+                location: "Lomas del Mirador"
+            },
+
+            {
+                name: "Edificio Terraza Palace",
+                lat: -38.02719,
+                lon: -57.53360,
+                status: "Obra",
+                year: "1957",
+                location: "Mar del Plata"
+            },
+
+            {
+                name: "Edificio Viviendas y Galeria Independencia",
+                lat: -37.99554,
+                lon: -57.55281,
+                status: "Obra",
+                year: "1958",
+                location: "Mar del Plata"
+            },
+
+            {
+                name: "Galeria de Las Américas",
+                lat: -37.99947,
+                lon: -57.54734,
+                status: "Obra",
+                year: "1958",
+                location: "Mar del Plata"
+            },
+
+            {
+                name: "Proyecto sin título",
+                lat: -34.58078,
+                lon: -58.39218,
+                status: "Obra",
+                year: "1960",
+                location: "Buenos Aires"
+            },
+
+            {
+                name: "Edificio Rosales",
+                lat: -34.57304,
+                lon: -58.42003,
+                status: "Proyecto",
+                year: "1960",
+                location: "Buenos Aires"
+            },
+
+            {
+                name: "Casa en Olivos / Casa Levin",
+                lat: -34.51772,
+                lon: -58.48187,
+                status: "Obra",
+                year: "1960-1961",
+                location: "Olivos"
+            },
+
+            {
+                name: "Galeria Arax",
+                lat: -34.60004,
+                lon: -58.37512,
+                status: "Obra",
+                year: "1962",
+                location: "Buenos Aires"
+            }
+
+        ];
+
+
+        /*
+         * ============================================================
+         * ARCHITECTURAL MARKER
+         * ============================================================
+         */
+
+        const archIcon = L.divIcon({
+
+            className: 'arch-marker',
+
+            iconSize: [12, 12],
+
+            iconAnchor: [6, 6]
+
+        });
+
+
+        /*
+         * ============================================================
+         * ADD MARKERS
+         * ============================================================
+         */
+
+        const bounds = [];
+
+
+        bonetData.forEach(function(poi) {
+
+            const popupContent = `
+
+                <div class="popup-title">
+                    ${poi.name}
+                </div>
+
+                <div class="popup-meta">
+                    Status:
+                    <span>${poi.status}</span>
+                </div>
+
+                <div class="popup-meta">
+                    Año:
+                    <span>${poi.year}</span>
+                </div>
+
+                <div class="popup-meta"
+                     style="margin-top: 6px;">
+
+                    📍 ${poi.location}
+
+                </div>
+
+            `;
+
+
+            L.marker(
+
+                [poi.lat, poi.lon],
+
+                {
+                    icon: archIcon
+                }
+
+            )
+
+            .bindPopup(
+
+                popupContent,
+
+                {
+                    offset: [0, -5],
+
+                    closeButton: true,
+
+                    autoPan: true
+
+                }
+
+            )
+
+            .addTo(map);
+
+
+            bounds.push([
+                poi.lat,
+                poi.lon
+            ]);
+
+        });
+
+
+        /*
+         * ============================================================
+         * FIT MAP TO DATA
+         * ============================================================
+         */
+
+        if (bounds.length > 0) {
+
+            map.fitBounds(
+
+                bounds,
+
+                {
+                    padding: [40, 40],
+
+                    maxZoom: 10
+                }
+
+            );
+
+        }
+
+
+        /*
+         * ============================================================
+         * CANVA / IFRAME SIZE FIX
+         *
+         * Leaflet sometimes initializes before the iframe has received
+         * its final dimensions.
+         *
+         * invalidateSize() forces Leaflet to recalculate the map.
+         * ============================================================
+         */
+
+        function refreshMapSize() {
+
+            if (typeof map !== 'undefined') {
+
+                map.invalidateSize({
+
+                    animate: false,
+
+                    pan: false
+
+                });
+
+            }
+
+        }
+
+
+        /*
+         * Initial refresh
+         */
+
+        setTimeout(
+
+            refreshMapSize,
+
+            100
+
+        );
+
+
+        setTimeout(
+
+            refreshMapSize,
+
+            500
+
+        );
+
+
+        setTimeout(
+
+            refreshMapSize,
+
+            1000
+
+        );
+
+
+        /*
+         * Refresh when browser/iframe dimensions change.
+         */
+
+        window.addEventListener(
+
+            'resize',
+
+            refreshMapSize
+
+        );
+
+
+        /*
+         * ResizeObserver is particularly useful when Canva changes
+         * the iframe dimensions without triggering a conventional
+         * window resize event.
+         */
+
+        if ('ResizeObserver' in window) {
+
+            const resizeObserver =
+                new ResizeObserver(function() {
+
+                    refreshMapSize();
+
+                });
+
+
+            resizeObserver.observe(
+
+                document.body
+
+            );
+
+        }
+
+
+        /*
+         * ============================================================
+         * PREVENT ACCIDENTAL PAGE SCROLL
+         * ============================================================
+         */
+
+        document.addEventListener(
+
+            'touchmove',
+
+            function(event) {
+
+                /*
+                 * Allow Leaflet to handle touch gestures.
+                 * Do not globally preventDefault(), because that would
+                 * interfere with map dragging and pinch zoom.
+                 */
+
+            },
+
+            {
+                passive: true
+            }
+
+        );
+
+    </script>
+
+</body>
+</html>
